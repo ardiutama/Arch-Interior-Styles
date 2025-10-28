@@ -1,0 +1,5 @@
+{
+  "name": "Arch-Interior Wiki",
+  "description": "An interactive web application that serves as a comprehensive encyclopedia for architectural and interior design terms. It provides Indonesian explanations for various keywords using tooltips powered by the Gemini API.",
+  "requestFramePermissions": []
+}
