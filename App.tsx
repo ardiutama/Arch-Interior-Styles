@@ -3,6 +3,7 @@ import { ARCHITECTURE_DATA } from './constants/keywords';
 import KeywordPill from './components/KeywordPill';
 import Tabs from './components/Tabs';
 import SidebarNav from './components/SidebarNav';
+import type { Keyword } from './types';
 
 const BlueprintIcon = () => (
     <svg
@@ -22,11 +23,80 @@ const BlueprintIcon = () => (
     </svg>
 );
 
+interface KeywordModalProps {
+  keyword: Keyword;
+  onClose: () => void;
+}
+
+const KeywordModal: React.FC<KeywordModalProps> = ({ keyword, onClose }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(keyword.term).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error('Gagal menyalin teks: ', err);
+    });
+  };
+  
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="keyword-modal-title"
+    >
+      <div 
+        className="bg-neutral-800 rounded-xl shadow-lg w-full max-w-sm border border-neutral-700 animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6 border-b border-neutral-700">
+          <h3 id="keyword-modal-title" className="text-xl font-bold text-green-400">{keyword.term}</h3>
+        </div>
+        <div className="p-6">
+          <p className="text-neutral-300 mb-6">{keyword.explanation}</p>
+          <div className="flex gap-3">
+            <button 
+              onClick={handleCopy}
+              className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+            >
+              {isCopied ? 'Disalin!' : 'Salin Istilah'}
+            </button>
+            <button 
+              onClick={onClose}
+              className="flex-1 bg-neutral-600 text-neutral-200 font-bold py-2 px-4 rounded-lg hover:bg-neutral-700 transition-colors"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const tabLabels = useMemo(() => ARCHITECTURE_DATA.map(d => d.collectionTitle), []);
   const [activeTab, setActiveTab] = useState<string>(tabLabels[0]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [modalKeyword, setModalKeyword] = useState<Keyword | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const activeCollection = useMemo(() => {
     return ARCHITECTURE_DATA.find(collection => collection.collectionTitle === activeTab);
@@ -123,6 +193,8 @@ const App: React.FC = () => {
                                 explanation={keyword.explanation}
                                 isLoading={false}
                                 onHover={() => {}}
+                                isMobile={isMobile}
+                                onPillClick={() => setModalKeyword(keyword)}
                             />
                         ))}
                       </div>
@@ -137,6 +209,13 @@ const App: React.FC = () => {
             </div>
           </div>
         </main>
+        
+        {modalKeyword && isMobile && (
+          <KeywordModal 
+              keyword={modalKeyword} 
+              onClose={() => setModalKeyword(null)}
+          />
+        )}
 
         <footer className="text-center mt-24 py-8 border-t border-neutral-700">
             <p className="text-neutral-500">Powered by React</p>

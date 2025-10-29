@@ -7,9 +7,11 @@ interface KeywordPillProps {
   explanation?: string;
   isLoading: boolean;
   onHover: (term: string) => void;
+  isMobile: boolean;
+  onPillClick: () => void;
 }
 
-const KeywordPill: React.FC<KeywordPillProps> = ({ term, explanation, isLoading, onHover }) => {
+const KeywordPill: React.FC<KeywordPillProps> = ({ term, explanation, isLoading, onHover, isMobile, onPillClick }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleMouseEnter = () => {
@@ -27,6 +29,8 @@ const KeywordPill: React.FC<KeywordPillProps> = ({ term, explanation, isLoading,
     });
   };
 
+  const handleClick = isMobile ? onPillClick : handleCopy;
+
   const tooltipContent = () => {
     if (isLoading) {
       return (
@@ -41,16 +45,24 @@ const KeywordPill: React.FC<KeywordPillProps> = ({ term, explanation, isLoading,
     }
     return explanation || 'Arahkan kursor untuk melihat penjelasan.';
   };
+  
+  const button = (
+    <button
+      onClick={handleClick}
+      className="inline-block bg-neutral-700 hover:bg-green-500 text-neutral-200 hover:text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md hover:shadow-green-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+    >
+      {isCopied && !isMobile ? 'Disalin!' : term}
+    </button>
+  );
+
+  if (isMobile) {
+    return button;
+  }
 
   return (
     <div onMouseEnter={handleMouseEnter}>
       <Tooltip content={tooltipContent()}>
-        <button
-          onClick={handleCopy}
-          className="inline-block bg-neutral-700 hover:bg-green-500 text-neutral-200 hover:text-white text-sm font-medium px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md hover:shadow-green-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          {isCopied ? 'Disalin!' : term}
-        </button>
+        {button}
       </Tooltip>
     </div>
   );
